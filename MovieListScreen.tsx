@@ -1,15 +1,24 @@
 // src/MovieListScreen.tsx
 
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Button, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Movie } from './types';
+import { Movie, WatchedFilter } from './types';
 import { useMovies } from './useMovies'; // Sử dụng hook mới
 
 import { MovieFormModal } from './MovieFormModal'; // Import Modal
+import { Picker } from '@react-native-picker/picker';
 
 export const MovieListScreen = () => {
-    const { movies, loading, loadMovies, toggleWatched, deleteMovie } = useMovies();
+    const { movies, loading, loadMovies, toggleWatched, deleteMovie, filteredMovies,
+        searchText,
+        setSearchText,
+        filterWatched,
+        setFilterWatched,
+        sortBy,
+        setSortBy,
+        sortOrder,
+        setSortOrder, } = useMovies();
     const [isModalVisible, setIsModalVisible] = React.useState(false); // State Modal
     const [movieToEdit, setMovieToEdit] = React.useState<Movie | null>(null); // State sửa phim (C6)
 
@@ -29,9 +38,9 @@ export const MovieListScreen = () => {
             `Bạn có chắc chắn muốn xóa phim "${movie.title}" khỏi danh sách?`,
             [
                 { text: 'Hủy', style: 'cancel' },
-                { 
-                    text: 'Xóa', 
-                    style: 'destructive', 
+                {
+                    text: 'Xóa',
+                    style: 'destructive',
                     onPress: () => {
                         if (deleteMovie(movie.id)) {
                             Alert.alert('Thành công', 'Đã xóa phim.');
@@ -94,14 +103,64 @@ export const MovieListScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.headerTitle}>🎬 Movie Watchlist</Text>
+            {/* Header và Import Button */}
+            <View style={styles.headerContainer}>
+                <Text style={styles.headerTitle}>🎬 Movie Watchlist</Text>
+                {/* Placeholder cho Import API (C9) */}
+                <Button title="Import API" onPress={() => console.log('Chức năng Import (C9)')} color="#007AFF" /> 
+            </View>
+            
+            {/* Search and Filter Bar (C8) */}
+            <View style={styles.searchFilterContainer}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Tìm kiếm theo tên phim..."
+                    value={searchText}
+                    onChangeText={setSearchText}
+                />
+                <View style={styles.filterPickerContainer}>
+                    <Picker
+                        selectedValue={filterWatched}
+                        onValueChange={(itemValue) => setFilterWatched(itemValue as WatchedFilter)}
+                        style={styles.filterPicker}
+                    >
+                        <Picker.Item label="Tất cả" value="all" />
+                        <Picker.Item label="Đã xem" value="watched" />
+                        <Picker.Item label="Chưa xem" value="unwatched" />
+                    </Picker>
+                </View>
+            </View>
+            
+            {/* Sort Controls (C10) */}
+            <View style={styles.sortContainer}>
+                <Text style={styles.sortLabel}>Sắp xếp:</Text>
+                <Picker
+                    selectedValue={sortBy}
+                    onValueChange={(itemValue) => setSortBy(itemValue as 'created_at' | 'year')}
+                    style={styles.sortPicker}
+                >
+                    <Picker.Item label="Mới tạo" value="created_at" />
+                    <Picker.Item label="Năm phát hành" value="year" />
+                </Picker>
+                <TouchableOpacity onPress={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}>
+                    <Ionicons 
+                        name={sortOrder === 'ASC' ? "arrow-up" : "arrow-down"} 
+                        size={24} 
+                        color="#333" 
+                        style={{ marginLeft: 5 }} 
+                    />
+                </TouchableOpacity>
+            </View>
 
             <FlatList
-                data={movies}
+                data={filteredMovies}
                 renderItem={renderItem}
                 keyExtractor={item => item.id.toString()}
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={<EmptyList />}
+                // Pull to Refresh (C10)
+                onRefresh={loadMovies} 
+                refreshing={loading}
+                ListEmptyComponent={<Text style={styles.emptyText}>Không tìm thấy phim.</Text>}
             />
 
             <TouchableOpacity
@@ -127,15 +186,76 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
         paddingTop: 50, // Điều chỉnh để có không gian cho header/status bar
     },
+    // --- C9 & Header Styles ---
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        marginBottom: 10,
+    },
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 15,
     },
+    // --- C8 Search & Filter Styles ---
+    searchFilterContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 10,
+        marginBottom: 15,
+        alignItems: 'center',
+        zIndex: 1, // Đảm bảo picker hiển thị trên các phần tử khác
+    },
+    searchInput: {
+        flex: 2,
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+        marginRight: 10,
+        backgroundColor: '#fff',
+    },
+    filterPickerContainer: {
+        flex: 1,
+        height: 40,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+    },
+    filterPicker: {
+        height: 40,
+        // Dùng margin âm nếu Picker bị cắt trên iOS/Android
+        marginVertical: -10, 
+    },
+    // --- C10 Sort Styles ---
+    sortContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        marginBottom: 10,
+        backgroundColor: '#fff',
+        paddingVertical: 5,
+        borderRadius: 5,
+        marginHorizontal: 10,
+    },
+    sortLabel: {
+        fontSize: 14,
+        marginRight: 5,
+        fontWeight: '500',
+    },
+    sortPicker: {
+        flex: 1,
+        height: 30,
+        marginVertical: -10,
+    },
+    // --- C3 List Styles ---
     listContent: {
         paddingHorizontal: 10,
-        paddingBottom: 100,
+        paddingBottom: 100, // Đủ chỗ cho nút Add
     },
     movieItem: {
         padding: 15,
@@ -179,6 +299,7 @@ const styles = StyleSheet.create({
     watchedIcon: {
         marginLeft: 5,
     },
+    // --- C3 Empty State Styles ---
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
@@ -191,6 +312,7 @@ const styles = StyleSheet.create({
         color: '#666',
         textAlign: 'center',
     },
+    // --- C4 Add Button Styles ---
     addButton: {
         position: 'absolute',
         bottom: 30,
