@@ -6,8 +6,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { Movie } from './types';
 import { useMovies } from './useMovies'; // Sử dụng hook mới
 
+import { MovieFormModal } from './MovieFormModal'; // Import Modal
+
 export const MovieListScreen = () => {
-  const { movies, loading, loadMovies } = useMovies(); // Lấy dữ liệu và trạng thái
+  const { movies, loading, loadMovies } = useMovies(); 
+  const [isModalVisible, setIsModalVisible] = React.useState(false); // State Modal
+  const [movieToEdit, setMovieToEdit] = React.useState<Movie | null>(null); // State sửa phim (C6)
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setMovieToEdit(null);
+  }
 
   // *** Logic render Item (Câu 3) ***
   const renderItem = ({ item }: { item: Movie }) => (
@@ -58,13 +67,19 @@ export const MovieListScreen = () => {
         ListEmptyComponent={<EmptyList />}
       />
 
-      {/* Nút thêm phim (Sẽ tích hợp Modal ở C4) */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => console.log('Mở Modal Thêm Phim (C4)')}
+        onPress={() => setIsModalVisible(true)} // Mở Modal
       >
         <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
+      
+      {/* Modal thêm/sửa phim */}
+      <MovieFormModal
+        isVisible={isModalVisible}
+        onClose={handleCloseModal}
+        movieToEdit={movieToEdit} // Hiện tại là null cho chức năng thêm
+      />
     </View>
   );
 };

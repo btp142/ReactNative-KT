@@ -29,10 +29,25 @@ export const useMovies = () => {
   
   // Các hàm CRUD khác sẽ được thêm vào ở các câu sau
 
+  const insertMovie = useCallback((title: string, year: number | null, rating: number | null) => {
+    try {
+      db.runSync(
+        'INSERT INTO movies (title, year, watched, rating, created_at) VALUES (?, ?, ?, ?, ?);',
+        [title, year, 0, rating, Date.now()]
+      );
+      loadMovies(); // Tải lại danh sách
+      return true;
+    } catch (error) {
+      console.error('Failed to insert movie:', error);
+      return false;
+    }
+  }, [loadMovies]); // loadMovies là dependency
+
   return { 
     movies, 
     loading, 
-    loadMovies, // Export để sử dụng cho pull-to-refresh
+    loadMovies,
+    insertMovie, // Export để sử dụng cho pull-to-refresh
     // Các hàm CRUD (C4-C7), Search/Filter (C8), Import (C9) sẽ được thêm vào
   };
 };
