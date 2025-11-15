@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { initDB } from './db';
+import { MovieListScreen } from './MovieListScreen';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
@@ -27,7 +28,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Movie Watchlist</Text>
+      <MovieListScreen />
       {/* Màn hình danh sách phim sẽ được đặt ở đây */}
       <Text>Database ready. Start building the list screen!</Text>
     </View>
