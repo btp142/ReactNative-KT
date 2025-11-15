@@ -1,7 +1,7 @@
 // App.tsx
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { initDB } from './db';
 import { MovieListScreen } from './MovieListScreen';
 
@@ -9,28 +9,27 @@ export default function App() {
   const [dbReady, setDbReady] = useState(false);
 
   useEffect(() => {
-    initDB()
-      .then(() => {
-        setDbReady(true);
-      })
-      .catch(error => {
-        console.error('Database initialization failed:', error);
-      });
+    try {
+      // Gọi initDB đồng bộ khi app khởi động
+      initDB();
+      setDbReady(true);
+    } catch (error) {
+      console.error('App init failed:', error);
+    }
   }, []);
 
   if (!dbReady) {
     return (
-      <View style={styles.container}>
-        <Text>Loading application...</Text>
+      <View style={styles.loadingContainer}>
+        <Text>Loading Movie Watchlist...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
+      {/* Màn hình danh sách phim (Câu 3-10) */}
       <MovieListScreen />
-      {/* Màn hình danh sách phim sẽ được đặt ở đây */}
-      <Text>Database ready. Start building the list screen!</Text>
     </View>
   );
 }
@@ -39,13 +38,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-    paddingTop: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
+    alignItems: 'center',
+  }
 });

@@ -1,35 +1,15 @@
 // src/MovieListScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { executeSql } from './db';
-import { Movie } from './types';
 import { Ionicons } from '@expo/vector-icons';
+import { Movie } from './types';
+import { useMovies } from './useMovies'; // Sử dụng hook mới
 
 export const MovieListScreen = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { movies, loading, loadMovies } = useMovies(); // Lấy dữ liệu và trạng thái
 
-  const loadMovies = async () => {
-    setLoading(true);
-    try {
-      const { rows } = await executeSql('SELECT * FROM movies ORDER BY created_at DESC;');
-      const loadedMovies: Movie[] = [];
-      for (let i = 0; i < rows.length; i++) {
-        loadedMovies.push(rows.item(i) as Movie);
-      }
-      setMovies(loadedMovies);
-    } catch (error) {
-      console.error('Failed to load movies:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMovies();
-  }, []);
-
+  // *** Logic render Item (Câu 3) ***
   const renderItem = ({ item }: { item: Movie }) => (
     <TouchableOpacity style={styles.movieItem}>
       <View style={styles.infoContainer}>
@@ -50,41 +30,60 @@ export const MovieListScreen = () => {
     </TouchableOpacity>
   );
 
+  // *** Empty State (Câu 3) ***
+  const EmptyList = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>Chưa có phim nào trong danh sách.</Text>
+      <Text style={styles.emptyText}>Nhấn nút (+) để thêm phim!</Text>
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={{ textAlign: 'center', marginTop: 50 }}>Loading...</Text>
       </View>
     );
   }
-
-  if (movies.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Chưa có phim nào trong danh sách.</Text>
-        <Text style={styles.emptyText}>Nhấn nút (+) để thêm phim!</Text>
-      </View>
-    );
-  }
-
+  
   return (
-    <FlatList
-      data={movies}
-      renderItem={renderItem}
-      keyExtractor={item => item.id.toString()}
-      contentContainerStyle={styles.listContent}
-    />
+    <View style={styles.container}>
+      <Text style={styles.headerTitle}>🎬 Movie Watchlist</Text>
+      
+      <FlatList
+        data={movies}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={<EmptyList />}
+      />
+
+      {/* Nút thêm phim (Sẽ tích hợp Modal ở C4) */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => console.log('Mở Modal Thêm Phim (C4)')}
+      >
+        <Ionicons name="add" size={30} color="white" />
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: '#f5f5f5',
+    paddingTop: 50, // Điều chỉnh để có không gian cho header/status bar
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingHorizontal: 10,
+    paddingBottom: 100,
   },
   movieItem: {
     padding: 15,
@@ -133,10 +132,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
+    marginTop: 50,
   },
   emptyText: {
     fontSize: 18,
     color: '#666',
     textAlign: 'center',
-  }
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: 'dodgerblue',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
 });
