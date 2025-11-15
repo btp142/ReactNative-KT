@@ -58,12 +58,27 @@ export const useMovies = () => {
     }
   }, [loadMovies]);
 
+  const updateMovie = useCallback((id: number, title: string, year: number | null, rating: number | null) => {
+        try {
+            db.runSync(
+                'UPDATE movies SET title = ?, year = ?, rating = ? WHERE id = ?;',
+                [title, year, rating, id]
+            );
+            loadMovies(); // Tải lại danh sách
+            return true;
+        } catch (error) {
+            console.error('Failed to update movie:', error);
+            return false;
+        }
+    }, [loadMovies]);
+
   return { 
     movies, 
     loading, 
     loadMovies,
     insertMovie,
-    toggleWatched // Export để sử dụng cho pull-to-refresh
+    toggleWatched,
+    updateMovie // Export để sử dụng cho pull-to-refresh
     // Các hàm CRUD (C4-C7), Search/Filter (C8), Import (C9) sẽ được thêm vào
   };
 };
