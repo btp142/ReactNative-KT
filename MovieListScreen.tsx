@@ -1,7 +1,7 @@
 // src/MovieListScreen.tsx
 
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Movie } from './types';
 import { useMovies } from './useMovies'; // Sử dụng hook mới
@@ -9,7 +9,7 @@ import { useMovies } from './useMovies'; // Sử dụng hook mới
 import { MovieFormModal } from './MovieFormModal'; // Import Modal
 
 export const MovieListScreen = () => {
-    const { movies, loading, loadMovies, toggleWatched } = useMovies();
+    const { movies, loading, loadMovies, toggleWatched, deleteMovie } = useMovies();
     const [isModalVisible, setIsModalVisible] = React.useState(false); // State Modal
     const [movieToEdit, setMovieToEdit] = React.useState<Movie | null>(null); // State sửa phim (C6)
 
@@ -21,6 +21,27 @@ export const MovieListScreen = () => {
     const handleEdit = (movie: Movie) => {
         setMovieToEdit(movie);
         setIsModalVisible(true);
+    };
+
+    const handleDelete = (movie: Movie) => {
+        Alert.alert(
+            'Xác nhận Xóa',
+            `Bạn có chắc chắn muốn xóa phim "${movie.title}" khỏi danh sách?`,
+            [
+                { text: 'Hủy', style: 'cancel' },
+                { 
+                    text: 'Xóa', 
+                    style: 'destructive', 
+                    onPress: () => {
+                        if (deleteMovie(movie.id)) {
+                            Alert.alert('Thành công', 'Đã xóa phim.');
+                        } else {
+                            Alert.alert('Lỗi', 'Không thể xóa phim.');
+                        }
+                    }
+                },
+            ]
+        );
     };
 
     // *** Logic render Item (Câu 3) ***
@@ -45,6 +66,10 @@ export const MovieListScreen = () => {
                     )}
                     <TouchableOpacity onPress={() => handleEdit(item)} style={{ marginLeft: 10 }}>
                         <Ionicons name="create-outline" size={24} color="#333" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => handleDelete(item)} style={{ marginLeft: 10 }}>
+                        <Ionicons name="trash-outline" size={24} color="red" />
                     </TouchableOpacity>
                 </View>
             </View>

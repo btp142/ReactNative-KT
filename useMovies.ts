@@ -72,13 +72,25 @@ export const useMovies = () => {
         }
     }, [loadMovies]);
 
+    const deleteMovie = useCallback((id: number) => {
+        try {
+            db.runSync('DELETE FROM movies WHERE id = ?;', [id]);
+            loadMovies();
+            return true;
+        } catch (error) {
+            console.error('Failed to delete movie:', error);
+            return false;
+        }
+    }, [loadMovies]);
+
   return { 
     movies, 
     loading, 
     loadMovies,
     insertMovie,
     toggleWatched,
-    updateMovie // Export để sử dụng cho pull-to-refresh
+    updateMovie,
+    deleteMovie // Export để sử dụng cho pull-to-refresh
     // Các hàm CRUD (C4-C7), Search/Filter (C8), Import (C9) sẽ được thêm vào
   };
 };
