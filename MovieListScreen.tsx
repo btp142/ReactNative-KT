@@ -9,7 +9,7 @@ import { useMovies } from './useMovies'; // Sử dụng hook mới
 import { MovieFormModal } from './MovieFormModal'; // Import Modal
 
 export const MovieListScreen = () => {
-  const { movies, loading, loadMovies } = useMovies(); 
+  const { movies, loading, loadMovies, toggleWatched } = useMovies(); 
   const [isModalVisible, setIsModalVisible] = React.useState(false); // State Modal
   const [movieToEdit, setMovieToEdit] = React.useState<Movie | null>(null); // State sửa phim (C6)
 
@@ -20,7 +20,10 @@ export const MovieListScreen = () => {
 
   // *** Logic render Item (Câu 3) ***
   const renderItem = ({ item }: { item: Movie }) => (
-    <TouchableOpacity style={styles.movieItem}>
+    <TouchableOpacity 
+      style={styles.movieItem}
+      onPress={() => toggleWatched(item.id, item.watched)} // Toggle khi chạm vào
+    >
       <View style={styles.infoContainer}>
         <Text style={item.watched ? styles.watchedTitle : styles.movieTitle}>
           {item.title} ({item.year})

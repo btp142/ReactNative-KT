@@ -43,11 +43,27 @@ export const useMovies = () => {
     }
   }, [loadMovies]); // loadMovies là dependency
 
+  const toggleWatched = useCallback((id: number, currentWatched: 0 | 1) => {
+    const newWatched = currentWatched === 0 ? 1 : 0;
+    try {
+      db.runSync(
+        'UPDATE movies SET watched = ? WHERE id = ?;',
+        [newWatched, id]
+      );
+      loadMovies(); // Tải lại danh sách
+      return true;
+    } catch (error) {
+      console.error('Failed to toggle watched state:', error);
+      return false;
+    }
+  }, [loadMovies]);
+
   return { 
     movies, 
     loading, 
     loadMovies,
-    insertMovie, // Export để sử dụng cho pull-to-refresh
+    insertMovie,
+    toggleWatched // Export để sử dụng cho pull-to-refresh
     // Các hàm CRUD (C4-C7), Search/Filter (C8), Import (C9) sẽ được thêm vào
   };
 };
